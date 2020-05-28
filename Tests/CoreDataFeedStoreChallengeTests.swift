@@ -14,6 +14,7 @@ private class CoreDataFeedStore: FeedStore {
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
+        coreDataManager.clearData(for: String(describing: CoreDataCache.self))
         coreDataManager.insertCoreDataCache(with: (feed, timestamp)) { _ in }
         completion(nil)
     }
@@ -82,9 +83,9 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     }
 
     func test_insert_overridesPreviouslyInsertedCacheValues() {
-//        let sut = makeSUT()
-//
-//        assertThatInsertOverridesPreviouslyInsertedCacheValues(on: sut)
+        let sut = makeSUT()
+
+        assertThatInsertOverridesPreviouslyInsertedCacheValues(on: sut)
     }
 
     func test_delete_deliversNoErrorOnEmptyCache() {
