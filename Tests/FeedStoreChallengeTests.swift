@@ -5,36 +5,6 @@
 import XCTest
 import FeedStoreChallenge
 
-private class InMemoryFeedStore: FeedStore {
-    
-    private struct InMemoryCache {
-        let feed: [LocalFeedImage]
-        let timestamp: Date
-    }
-    
-    private var cache: InMemoryCache?
-    
-    func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-        if cache != nil {
-            cache = nil
-        }
-        completion(nil)
-    }
-    
-    func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        cache = InMemoryCache(feed: feed, timestamp: timestamp)
-        completion(nil)
-    }
-    
-    func retrieve(completion: @escaping RetrievalCompletion) {
-        if let cache = cache {
-            completion(.found(feed: cache.feed, timestamp: cache.timestamp))
-        } else {
-            completion(.empty)
-        }
-    }
-}
-
 class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	
 //
