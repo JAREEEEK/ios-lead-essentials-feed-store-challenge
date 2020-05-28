@@ -10,11 +10,12 @@ private class CoreDataFeedStore: FeedStore {
     private let coreDataManager = CoreDataManager.shared
     
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+        clearData()
         completion(nil)
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        coreDataManager.clearData(for: String(describing: CoreDataCache.self))
+        clearData()
         coreDataManager.insertCoreDataCache(with: (feed, timestamp)) { _ in }
         completion(nil)
     }
@@ -25,6 +26,11 @@ private class CoreDataFeedStore: FeedStore {
         } else {
             completion(.empty)
         }
+    }
+    
+    private func clearData() {
+        coreDataManager.clearData(for: String(describing: CoreDataCache.self))
+        coreDataManager.clearData(for: String(describing: CoreDataFeedImage.self))
     }
 }
 
@@ -107,9 +113,9 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     }
 
     func test_delete_emptiesPreviouslyInsertedCache() {
-//        let sut = makeSUT()
-//
-//        assertThatDeleteEmptiesPreviouslyInsertedCache(on: sut)
+        let sut = makeSUT()
+
+        assertThatDeleteEmptiesPreviouslyInsertedCache(on: sut)
     }
 
     func test_storeSideEffects_runSerially() {
