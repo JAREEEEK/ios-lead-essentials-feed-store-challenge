@@ -6,16 +6,24 @@ import XCTest
 import FeedStoreChallenge
 
 private class CoreDataFeedStore: FeedStore {
+    
+    private let coreDataManager = CoreDataManager.shared
+    
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
         
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        
+        coreDataManager.insertCoreDataCache(with: (feed, timestamp)) { _ in }
+        completion(nil)
     }
     
     func retrieve(completion: @escaping RetrievalCompletion) {
-        completion(.empty)
+        if let cache = coreDataManager.fetchCache() {
+            completion(.found(feed: cache.feedImageModels(), timestamp: cache.timestamp))
+        } else {
+            completion(.empty)
+        }
     }
 }
 
@@ -26,6 +34,16 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 //   Uncomment the test implementations one by one.
 //      Follow the process: Make the test pass, commit, and move to the next one.
 //
+    
+    override func setUp() {
+        super.setUp()
+        clearDataBeforeTest()
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        clearDataAfterTest()
+    }
 
     func test_retrieve_deliversEmptyOnEmptyCache() {
         let sut = makeSUT()
@@ -40,9 +58,9 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     }
 
     func test_retrieve_deliversFoundValuesOnNonEmptyCache() {
-//        let sut = makeSUT()
-//
-//        assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
+        let sut = makeSUT()
+
+        assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
     }
 
     func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
@@ -105,6 +123,18 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
        CoreDataFeedStore()
     }
     
+    private func clearDataBeforeTest() {
+        clearData()
+    }
+    
+    private func clearDataAfterTest() {
+        clearData()
+    }
+    
+    private func clearData() {
+        CoreDataManager.shared.clearData(for: String(describing: CoreDataCache.self))
+        CoreDataManager.shared.clearData(for: String(describing: CoreDataFeedImage.self))
+    }
 }
 
 //
