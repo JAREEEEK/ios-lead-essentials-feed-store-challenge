@@ -8,23 +8,36 @@ import FeedStoreChallenge
 private class CoreDataFeedStore: FeedStore {
     
     private let coreDataManager = CoreDataManager.shared
+    private let queue = DispatchQueue(label: "CoreDataFeedStore", qos: .userInitiated, attributes: .concurrent)
     
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-        clearData()
-        completion(nil)
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            
+            self.clearData()
+            completion(nil)
+        }
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        clearData()
-        coreDataManager.insertCoreDataCache(with: (feed, timestamp)) { _ in }
-        completion(nil)
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            
+            self.clearData()
+            self.coreDataManager.insertCoreDataCache(with: (feed, timestamp)) { _ in }
+            completion(nil)
+        }
     }
     
     func retrieve(completion: @escaping RetrievalCompletion) {
-        if let cache = coreDataManager.fetchCache() {
-            completion(.found(feed: cache.feedImageModels(), timestamp: cache.timestamp))
-        } else {
-            completion(.empty)
+        queue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if let cache = self.coreDataManager.fetchCache() {
+                completion(.found(feed: cache.feedImageModels(), timestamp: cache.timestamp))
+            } else {
+                completion(.empty)
+            }
         }
     }
     
@@ -119,9 +132,9 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     }
 
     func test_storeSideEffects_runSerially() {
-//        let sut = makeSUT()
-//
-//        assertThatSideEffectsRunSerially(on: sut)
+        let sut = makeSUT()
+
+        assertThatSideEffectsRunSerially(on: sut)
     }
     
     // - MARK: Helpers
