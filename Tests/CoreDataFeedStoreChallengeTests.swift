@@ -39,20 +39,17 @@ private class CoreDataFeedStore: FeedStore {
         let context = self.context
         context.perform {
             do {
+                // clear cache before inserting the new one
                 CoreDataCache.fetch(with: context).map(context.delete)
-                self.insertCoreDataCache(with: (feed, timestamp)) { _ in }
+                // insert new cache
+                CoreDataCache.create(with: (feed, timestamp), in: context)
+                // save context
                 try context.save()
                 completion(nil)
             } catch {
                 completion(nil)
             }
         }
-    }
-    
-    func insertCoreDataCache(with data: (feed: [LocalFeedImage], timestamp: Date), completion: @escaping (Error?) -> Void) {
-        let context = self.context
-        let feedImages = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
-        CoreDataCache.create(with: (feedImages, data.timestamp), in: context)
     }
     
     func retrieve(completion: @escaping RetrievalCompletion) {

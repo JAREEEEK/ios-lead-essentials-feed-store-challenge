@@ -9,9 +9,10 @@ public class CoreDataCache: NSManagedObject {
     @NSManaged public var timestamp: Date
     @NSManaged public var feed: NSOrderedSet
     
-    public class func create(with data: (feed: NSOrderedSet, timestamp: Date), in context: NSManagedObjectContext) {
+    public class func create(with data: (feed: [LocalFeedImage], timestamp: Date), in context: NSManagedObjectContext) {
+        let coreDataFeedImages = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
         let cache = CoreDataCache(context: context)
-        cache.feed = data.feed
+        cache.feed = coreDataFeedImages
         cache.timestamp = data.timestamp
     }
     
