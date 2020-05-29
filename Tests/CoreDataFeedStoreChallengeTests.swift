@@ -99,7 +99,9 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     
     private func makeSUT() -> FeedStore {
         let container = getLoadedTestPersistentContainer()
-        return CoreDataFeedStore(container: container)
+        let sut = CoreDataFeedStore(container: container)
+        trackForMemoryLeaks(sut)
+        return sut
     }
     
     private func getLoadedTestPersistentContainer() -> NSPersistentContainer {
