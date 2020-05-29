@@ -14,6 +14,11 @@ public class CoreDataCache: NSManagedObject {
         cache.feed = data.feed
         cache.timestamp = data.timestamp
     }
+    
+    @nonobjc public class func fetch(with context: NSManagedObjectContext) -> CoreDataCache? {
+        let request = CoreDataCache.fetchRequest()
+        return try? context.fetch(request).first as? CoreDataCache
+    }
         
     public func feedImageModels() -> [LocalFeedImage] {
         feed.compactMap { ($0 as? CoreDataFeedImage)?.localFeedImage }
