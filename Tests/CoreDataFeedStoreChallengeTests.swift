@@ -30,7 +30,7 @@ private class CoreDataFeedStore: FeedStore {
                 try context.save()
                 completion(nil)
             } catch {
-                completion(nil)
+                completion(error)
             }
         }
     }
@@ -47,7 +47,7 @@ private class CoreDataFeedStore: FeedStore {
                 try context.save()
                 completion(nil)
             } catch {
-                completion(nil)
+                completion(error)
             }
         }
     }
