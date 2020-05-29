@@ -95,11 +95,11 @@
 		08CE2B8D2285BBD100183A1B /* FeedStoreChallenge */ = {
 			isa = PBXGroup;
 			children = (
+				C4E6A46624813C5800F68425 /* In Memory Feature */,
 				C4C1820E247FF3C800BA71E6 /* Core Data Feature */,
 				08CE2BA72285BCC600183A1B /* LocalFeedImage.swift */,
 				08CE2BA52285BCB600183A1B /* FeedStore.swift */,
 				08CE2B8F2285BBD100183A1B /* Info.plist */,
-				C4C181F4247FD6DF00BA71E6 /* InMemoryFeedStore.swift */,
 			);
 			path = FeedStoreChallenge;
 			sourceTree = "<group>";
@@ -136,6 +136,14 @@
 				C4E6A46424813B8100F68425 /* CoreDataFeedStore.swift */,
 			);
 			path = "Core Data Feature";
+			sourceTree = "<group>";
+		};
+		C4E6A46624813C5800F68425 /* In Memory Feature */ = {
+			isa = PBXGroup;
+			children = (
+				C4C181F4247FD6DF00BA71E6 /* InMemoryFeedStore.swift */,
+			);
+			path = "In Memory Feature";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
