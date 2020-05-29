@@ -2,7 +2,7 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19E287" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="CoreDataCache" representedClassName="CoreDataCache" syncable="YES">
         <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="feed" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="CoreDataFeedImage" inverseName="cache" inverseEntity="CoreDataFeedImage"/>
+        <relationship name="feed" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="CoreDataFeedImage" inverseName="cache" inverseEntity="CoreDataFeedImage"/>
     </entity>
     <entity name="CoreDataFeedImage" representedClassName="CoreDataFeedImage" syncable="YES">
         <attribute name="feedImagedescription" optional="YES" attributeType="String"/>

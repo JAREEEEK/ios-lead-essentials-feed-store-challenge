@@ -6,34 +6,85 @@ import XCTest
 import FeedStoreChallenge
 
 private class CoreDataFeedStore: FeedStore {
+        
+    private let container: NSPersistentContainer
+    private let context: NSManagedObjectContext
+    static let model: NSManagedObjectModel = {
+        let bundle: Bundle = Bundle(for: CoreDataCache.self)
+        let modelPath = bundle.path(forResource: "FeedStoreDataModel", ofType: "momd")!
+        let modelURL = URL(fileURLWithPath: modelPath)
+        return NSManagedObjectModel(contentsOf: modelURL)!
+    }()
     
-    private let coreDataManager = CoreDataManager.shared
-    private let queue = DispatchQueue(label: "CoreDataFeedStore", qos: .userInitiated, attributes: .concurrent)
+    init(container: NSPersistentContainer) {
+        self.container = container
+        self.context = container.newBackgroundContext()
+    }
     
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            
-            self.clearData()
-            completion(nil)
+        let context = self.context
+        let cache = fetchCache() as CoreDataCache?
+        context.perform {
+            do {
+                cache.map(context.delete)
+                try context.save()
+                completion(nil)
+            } catch {
+                completion(nil)
+            }
         }
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        queue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
-            
-            self.clearData()
-            self.coreDataManager.insertCoreDataCache(with: (feed, timestamp)) { _ in }
-            completion(nil)
+        let context = self.context
+        let cache = fetchCache() as CoreDataCache?
+        context.perform {
+            do {
+                cache.map(context.delete)
+                self.insertCoreDataCache(with: (feed, timestamp)) { _ in }
+                try context.save()
+                completion(nil)
+            } catch {
+                completion(nil)
+            }
         }
     }
     
-    func retrieve(completion: @escaping RetrievalCompletion) {
-        queue.async { [weak self] in
+    func insertCoreDataCache(with data: (feed: [LocalFeedImage], timestamp: Date), completion: @escaping (Error?) -> Void) {
+        context.perform { [weak self] in
             guard let self = self else { return }
             
-            if let cache = self.coreDataManager.fetchCache() {
+            let coreDataFeed = data.feed.map { self.createCoreDataFeedImage(with: $0) }
+            self.createCoreDataCache(with: (coreDataFeed, data.timestamp))
+        }
+    }
+    
+    @discardableResult
+    private func createCoreDataCache(with data: (feed: [CoreDataFeedImage], timestamp: Date)) -> CoreDataCache {
+        guard let coreDataCache = NSEntityDescription.insertNewObject(forEntityName: "CoreDataCache", into: context) as? CoreDataCache
+        else { fatalError("Failed to insert new core data object") }
+        coreDataCache.feed = NSOrderedSet(array: data.feed)
+        coreDataCache.timestamp = data.timestamp
+        
+        return coreDataCache
+    }
+    
+    @discardableResult
+    private func createCoreDataFeedImage(with feedImage: LocalFeedImage) -> CoreDataFeedImage {
+        guard let coreDataFeedImage = NSEntityDescription.insertNewObject(forEntityName: "CoreDataFeedImage", into: context) as? CoreDataFeedImage
+            else { fatalError("Failed to insert new core data object") }
+        
+        coreDataFeedImage.id = feedImage.id
+        coreDataFeedImage.feedImagedescription = feedImage.description
+        coreDataFeedImage.location = feedImage.location ?? ""
+        coreDataFeedImage.url = feedImage.url
+        
+        return coreDataFeedImage
+    }
+    
+    func retrieve(completion: @escaping RetrievalCompletion) {
+        context.perform {
+            if let cache = self.fetchCache() as CoreDataCache? {
                 completion(.found(feed: cache.feedImageModels(), timestamp: cache.timestamp))
             } else {
                 completion(.empty)
@@ -41,9 +92,9 @@ private class CoreDataFeedStore: FeedStore {
         }
     }
     
-    private func clearData() {
-        coreDataManager.clearData(for: String(describing: CoreDataCache.self))
-        coreDataManager.clearData(for: String(describing: CoreDataFeedImage.self))
+    func fetchCache<T:NSFetchRequestResult>() -> T? {
+        let request = NSFetchRequest<T>(entityName: String(describing: T.self))
+        return try? context.fetch(request).first
     }
 }
 
@@ -55,16 +106,6 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 //      Follow the process: Make the test pass, commit, and move to the next one.
 //
     
-    override func setUp() {
-        super.setUp()
-        clearDataBeforeTest()
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        clearDataAfterTest()
-    }
-
     func test_retrieve_deliversEmptyOnEmptyCache() {
         let sut = makeSUT()
 
@@ -140,20 +181,9 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     // - MARK: Helpers
     
     private func makeSUT() -> FeedStore {
-       CoreDataFeedStore()
-    }
-    
-    private func clearDataBeforeTest() {
-        clearData()
-    }
-    
-    private func clearDataAfterTest() {
-        clearData()
-    }
-    
-    private func clearData() {
-        CoreDataManager.shared.clearData(for: String(describing: CoreDataCache.self))
-        CoreDataManager.shared.clearData(for: String(describing: CoreDataFeedImage.self))
+        let container = NSPersistentContainer(name: "FeedStoreDataModel", managedObjectModel: CoreDataFeedStore.model)
+        container.loadPersistentStores { (_, _) in }
+       return CoreDataFeedStore(container: container)
     }
 }
 
