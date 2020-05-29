@@ -55,19 +55,9 @@ private class CoreDataFeedStore: FeedStore {
         context.perform { [weak self] in
             guard let self = self else { return }
             
-            let images = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
-            self.createCoreDataCache(with: (images, data.timestamp))
+            let feedImages = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
+            CoreDataCache.create(with: (feedImages, data.timestamp), in: context)
         }
-    }
-    
-    @discardableResult
-    private func createCoreDataCache(with data: (feed: NSOrderedSet, timestamp: Date)) -> CoreDataCache {
-        guard let coreDataCache = NSEntityDescription.insertNewObject(forEntityName: "CoreDataCache", into: context) as? CoreDataCache
-        else { fatalError("Failed to insert new core data object") }
-        coreDataCache.feed = data.feed
-        coreDataCache.timestamp = data.timestamp
-        
-        return coreDataCache
     }
     
     func retrieve(completion: @escaping RetrievalCompletion) {
