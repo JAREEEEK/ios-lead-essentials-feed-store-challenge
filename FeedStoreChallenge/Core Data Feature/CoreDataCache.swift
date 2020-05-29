@@ -15,9 +15,14 @@ public class CoreDataCache: NSManagedObject {
         cache.timestamp = data.timestamp
     }
     
-    @nonobjc public class func fetch(with context: NSManagedObjectContext) -> CoreDataCache? {
+    public class func fetch(with context: NSManagedObjectContext) -> CoreDataCache? {
         let request = CoreDataCache.fetchRequest()
         return try? context.fetch(request).first as? CoreDataCache
+    }
+    
+    public class func clearCache(with context: NSManagedObjectContext) {
+        CoreDataCache.fetch(with: context).map(context.delete)
+        try? context.save()
     }
         
     public func feedImageModels() -> [LocalFeedImage] {

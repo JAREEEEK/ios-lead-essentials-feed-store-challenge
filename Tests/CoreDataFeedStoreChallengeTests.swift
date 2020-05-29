@@ -51,10 +51,8 @@ private class CoreDataFeedStore: FeedStore {
     
     func insertCoreDataCache(with data: (feed: [LocalFeedImage], timestamp: Date), completion: @escaping (Error?) -> Void) {
         let context = self.context
-        context.perform {
-            let feedImages = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
-            CoreDataCache.create(with: (feedImages, data.timestamp), in: context)
-        }
+        let feedImages = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
+        CoreDataCache.create(with: (feedImages, data.timestamp), in: context)
     }
     
     func retrieve(completion: @escaping RetrievalCompletion) {
@@ -76,6 +74,16 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 //   Uncomment the test implementations one by one.
 //      Follow the process: Make the test pass, commit, and move to the next one.
 //
+    
+    override func setUp() {
+        super.setUp()
+        clearDataBeforeTest()
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        clearDataAfterTest()
+    }
     
     func test_retrieve_deliversEmptyOnEmptyCache() {
         let sut = makeSUT()
@@ -152,9 +160,28 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
     // - MARK: Helpers
     
     private func makeSUT() -> FeedStore {
+        let container = getLoadedTestPersistentContainer()
+        return CoreDataFeedStore(container: container)
+    }
+    
+    private func getLoadedTestPersistentContainer() -> NSPersistentContainer {
         let container = NSPersistentContainer(name: "FeedStoreDataModel", managedObjectModel: CoreDataFeedStore.model)
         container.loadPersistentStores { (_, _) in }
-       return CoreDataFeedStore(container: container)
+        return container
+    }
+    
+    private func clearDataBeforeTest() {
+        clearTestData()
+    }
+    
+    private func clearDataAfterTest() {
+        clearTestData()
+    }
+    
+    private func clearTestData() {
+        let container = getLoadedTestPersistentContainer()
+        let context = container.newBackgroundContext()
+        CoreDataCache.clearCache(with: context)
     }
 }
 
