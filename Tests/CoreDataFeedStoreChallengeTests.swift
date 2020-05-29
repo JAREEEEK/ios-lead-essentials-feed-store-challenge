@@ -51,35 +51,23 @@ private class CoreDataFeedStore: FeedStore {
     }
     
     func insertCoreDataCache(with data: (feed: [LocalFeedImage], timestamp: Date), completion: @escaping (Error?) -> Void) {
+        let context = self.context
         context.perform { [weak self] in
             guard let self = self else { return }
             
-            let coreDataFeed = data.feed.map { self.createCoreDataFeedImage(with: $0) }
-            self.createCoreDataCache(with: (coreDataFeed, data.timestamp))
+            let images = CoreDataFeedImage.coreDataFeed(with: data.feed, in: context)
+            self.createCoreDataCache(with: (images, data.timestamp))
         }
     }
     
     @discardableResult
-    private func createCoreDataCache(with data: (feed: [CoreDataFeedImage], timestamp: Date)) -> CoreDataCache {
+    private func createCoreDataCache(with data: (feed: NSOrderedSet, timestamp: Date)) -> CoreDataCache {
         guard let coreDataCache = NSEntityDescription.insertNewObject(forEntityName: "CoreDataCache", into: context) as? CoreDataCache
         else { fatalError("Failed to insert new core data object") }
-        coreDataCache.feed = NSOrderedSet(array: data.feed)
+        coreDataCache.feed = data.feed
         coreDataCache.timestamp = data.timestamp
         
         return coreDataCache
-    }
-    
-    @discardableResult
-    private func createCoreDataFeedImage(with feedImage: LocalFeedImage) -> CoreDataFeedImage {
-        guard let coreDataFeedImage = NSEntityDescription.insertNewObject(forEntityName: "CoreDataFeedImage", into: context) as? CoreDataFeedImage
-            else { fatalError("Failed to insert new core data object") }
-        
-        coreDataFeedImage.id = feedImage.id
-        coreDataFeedImage.feedImagedescription = feedImage.description
-        coreDataFeedImage.location = feedImage.location ?? ""
-        coreDataFeedImage.url = feedImage.url
-        
-        return coreDataFeedImage
     }
     
     func retrieve(completion: @escaping RetrievalCompletion) {

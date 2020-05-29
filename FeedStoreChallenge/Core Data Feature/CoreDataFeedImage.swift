@@ -17,8 +17,19 @@ public class CoreDataFeedImage: NSManagedObject {
     @NSManaged public var location: String?
     @NSManaged public var cache: CoreDataCache
     
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<CoreDataFeedImage> {
-        return NSFetchRequest<CoreDataFeedImage>(entityName: "CoreDataFeedImage")
+    @nonobjc public class func coreDataFeed(with feed: [LocalFeedImage], in context: NSManagedObjectContext) -> NSOrderedSet {
+        NSOrderedSet(array: feed.map { feedImage in
+            let coreDataFeedImage = CoreDataFeedImage(context: context)
+            coreDataFeedImage.id = feedImage.id
+            coreDataFeedImage.feedImagedescription = feedImage.description
+            coreDataFeedImage.location = feedImage.location
+            coreDataFeedImage.url = feedImage.url
+            
+            return coreDataFeedImage
+        })
     }
     
+    lazy var localFeedImage: LocalFeedImage = {
+        LocalFeedImage(id: id, description: feedImagedescription, location: location, url: url)
+    }()
 }
