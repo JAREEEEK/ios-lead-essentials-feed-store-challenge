@@ -9,18 +9,9 @@
 import Foundation
 import CoreData
 
-
-
 public class CoreDataFeedStore: FeedStore {
     private let container: NSPersistentContainer
     private let context: NSManagedObjectContext
-    
-    public static let model: NSManagedObjectModel = {
-        let bundle: Bundle = Bundle(for: CoreDataCache.self)
-        let modelPath = bundle.path(forResource: "FeedStoreDataModel", ofType: "momd")!
-        let modelURL = URL(fileURLWithPath: modelPath)
-        return NSManagedObjectModel(contentsOf: modelURL)!
-    }()
     
     public init(storeURL: URL, bundle: Bundle) throws {
         self.container = try NSPersistentContainer.load(modelName: "FeedStoreDataModel", url: storeURL, in: bundle)

@@ -13,16 +13,6 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 //      Follow the process: Make the test pass, commit, and move to the next one.
 //
     
-    override func setUp() {
-        super.setUp()
-        clearDataBeforeTest()
-    }
-    
-    override func tearDown() {
-        super.tearDown()
-        clearDataAfterTest()
-    }
-    
     func test_retrieve_deliversEmptyOnEmptyCache() {
         let sut = makeSUT()
 
@@ -103,25 +93,5 @@ class CoreDataFeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
         let sut = try! CoreDataFeedStore(storeURL: storeURL, bundle: storeBundle)
         trackForMemoryLeaks(sut)
         return sut
-    }
-    
-    private func getLoadedTestPersistentContainer() -> NSPersistentContainer {
-        let container = NSPersistentContainer(name: "FeedStoreDataModel", managedObjectModel: CoreDataFeedStore.model)
-        container.loadPersistentStores { (_, _) in }
-        return container
-    }
-    
-    private func clearDataBeforeTest() {
-        clearTestData()
-    }
-    
-    private func clearDataAfterTest() {
-        clearTestData()
-    }
-    
-    private func clearTestData() {
-        let container = getLoadedTestPersistentContainer()
-        let context = container.newBackgroundContext()
-        CoreDataCache.clearCache(with: context)
     }
 }
